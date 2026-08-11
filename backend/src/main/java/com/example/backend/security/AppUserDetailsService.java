@@ -1,0 +1,36 @@
+package com.example.backend.security;
+
+import com.example.backend.model.AppUser;
+import com.example.backend.repository.AppUserRepository;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+
+/*
+ * Used by AuthenticationManager during login to look up a user by email and
+ * compare the submitted password against the stored BCrypt hash. This is
+ * separate from JwtAuthenticationFilter, which handles already-issued
+ * tokens on every other request.
+ */
+@Service
+public class AppUserDetailsService implements UserDetailsService {
+
+    private final AppUserRepository appUserRepository;
+
+    public AppUserDetailsService(AppUserRepository appUserRepository) {
+        this.appUserRepository = appUserRepository;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        AppUser user = appUserRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User was not found"));
+
+        return User.withUsername(user.getEmail())
+                .password(user.getPasswordHash())
+                .authorities("ROLE_" + user.getRole())
+                .build();
+    }
+}
