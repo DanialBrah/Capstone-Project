@@ -15,7 +15,7 @@ export default function RegisterPage() {
   const navigate = useNavigate();
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/courses" replace />;
   }
 
   async function handleSubmit(event) {
@@ -27,7 +27,7 @@ export default function RegisterPage() {
       // Registering logs you straight in - the backend returns a token
       // for the new account, same as the login endpoint does.
       await register(name, email, password);
-      navigate('/dashboard', { replace: true });
+      navigate('/courses', { replace: true });
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
