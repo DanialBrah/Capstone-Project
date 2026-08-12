@@ -4,6 +4,7 @@ import com.example.backend.dto.ApiErrorResponse;
 import com.example.backend.dto.FieldErrorDetail;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -45,6 +46,18 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiErrorResponse handleInvalidRequest(InvalidRequestException exception) {
         return new ApiErrorResponse(exception.getMessage(), HttpStatus.BAD_REQUEST.value(), List.of());
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiErrorResponse handleResourceNotFound(ResourceNotFoundException exception) {
+        return new ApiErrorResponse(exception.getMessage(), HttpStatus.NOT_FOUND.value(), List.of());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiErrorResponse handleAccessDenied(AccessDeniedException exception) {
+        return new ApiErrorResponse(exception.getMessage(), HttpStatus.FORBIDDEN.value(), List.of());
     }
 
     @ExceptionHandler({BadCredentialsException.class, UsernameNotFoundException.class})
