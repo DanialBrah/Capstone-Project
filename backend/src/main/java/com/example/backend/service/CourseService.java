@@ -19,6 +19,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -39,6 +40,10 @@ public class CourseService {
     private static final Set<String> ALLOWED_SORT_FIELDS = Set.of(
             "title", "category", "level", "capacity", "createdAt"
     );
+
+    private static final Pattern IMAGE_DATA_URI_PATTERN =
+            Pattern.compile("^data:image/(png|jpe?g|webp|gif);base64,(.+)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final int MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
     private final CourseRepository courseRepository;
     private final MongoTemplate mongoTemplate;
@@ -95,6 +100,8 @@ public class CourseService {
     }
 
     public CourseResponse createCourse(CreateCourseRequest request) {
+        validateImage(request.getImageBase64());
+
         Course course = new Course(
                 request.getTitle().trim(),
                 request.getDescription().trim(),
@@ -103,6 +110,7 @@ public class CourseService {
                 request.getInstructor().trim(),
                 request.getCapacity()
         );
+        course.setImageBase64(hasValue(request.getImageBase64()) ? request.getImageBase64() : null);
 
         Course savedCourse = courseRepository.save(course);
         logger.info("Created course id={} title={}", savedCourse.getId(), savedCourse.getTitle());
@@ -112,6 +120,7 @@ public class CourseService {
 
     public CourseResponse updateCourse(String id, UpdateCourseRequest request) {
         Course course = findCourseOrThrow(id);
+        validateImage(request.getImageBase64());
 
         if (request.getCapacity() < course.getEnrolledCount()) {
             throw new InvalidRequestException(
@@ -124,6 +133,7 @@ public class CourseService {
         course.setLevel(request.getLevel().trim());
         course.setInstructor(request.getInstructor().trim());
         course.setCapacity(request.getCapacity());
+        course.setImageBase64(hasValue(request.getImageBase64()) ? request.getImageBase64() : null);
 
         Course savedCourse = courseRepository.save(course);
         logger.info("Updated course id={}", savedCourse.getId());
@@ -169,6 +179,31 @@ public class CourseService {
         return value != null && !value.isBlank();
     }
 
+    // Only ever called with a value the caller intends to store - blank/null
+    // (meaning "no image" or "clear the image") is left to the caller.
+    private void validateImage(String imageBase64) {
+        if (!hasValue(imageBase64)) {
+            return;
+        }
+
+        var matcher = IMAGE_DATA_URI_PATTERN.matcher(imageBase64.trim());
+        if (!matcher.matches()) {
+            throw new InvalidRequestException(
+                    "Image must be a base64 data URI (data:image/png|jpeg|webp|gif;base64,...)");
+        }
+
+        byte[] decoded;
+        try {
+            decoded = Base64.getDecoder().decode(matcher.group(2));
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRequestException("Image data is not valid base64");
+        }
+
+        if (decoded.length > MAX_IMAGE_BYTES) {
+            throw new InvalidRequestException("Image must be 2MB or smaller");
+        }
+    }
+
     private CourseResponse toResponse(Course course) {
         return new CourseResponse(
                 course.getId(),
@@ -179,7 +214,8 @@ public class CourseService {
                 course.getInstructor(),
                 course.getCapacity(),
                 course.getEnrolledCount(),
-                course.isActive()
+                course.isActive(),
+                course.getImageBase64()
         );
     }
 }

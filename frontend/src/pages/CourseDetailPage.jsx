@@ -94,6 +94,8 @@ export default function CourseDetailPage() {
         <StatusBadge status={course.active ? 'ACTIVE' : 'INACTIVE'} />
       </div>
 
+      {course.imageBase64 && <img className="course-image-banner" src={course.imageBase64} alt="" />}
+
       <p>{course.description}</p>
 
       <div className="detail-grid">

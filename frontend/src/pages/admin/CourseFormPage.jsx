@@ -5,7 +5,17 @@ import LoadingMessage from '../../components/LoadingMessage.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { createCourse, fetchCourseById, updateCourse } from '../../services/courseApi.js';
 
-const EMPTY_FORM = { title: '', description: '', category: '', level: '', instructor: '', capacity: 10 };
+const EMPTY_FORM = {
+  title: '',
+  description: '',
+  category: '',
+  level: '',
+  instructor: '',
+  capacity: 10,
+  imageBase64: ''
+};
+
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
 export default function CourseFormPage() {
   const { id } = useParams();
@@ -37,7 +47,8 @@ export default function CourseFormPage() {
             category: course.category,
             level: course.level,
             instructor: course.instructor,
-            capacity: course.capacity
+            capacity: course.capacity,
+            imageBase64: course.imageBase64 || ''
           });
         }
       } catch (err) {
@@ -60,6 +71,25 @@ export default function CourseFormPage() {
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function handleImageChange(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+
+    if (!file) {
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_BYTES) {
+      setError('Image must be 2MB or smaller.');
+      return;
+    }
+
+    setError('');
+    const reader = new FileReader();
+    reader.onload = () => updateField('imageBase64', reader.result);
+    reader.readAsDataURL(file);
   }
 
   async function handleSubmit(event) {
@@ -154,6 +184,20 @@ export default function CourseFormPage() {
             required
           />
         </label>
+
+        <label>
+          Image
+          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleImageChange} />
+        </label>
+
+        {form.imageBase64 && (
+          <div className="image-upload-preview">
+            <img src={form.imageBase64} alt="Course preview" />
+            <button type="button" onClick={() => updateField('imageBase64', '')}>
+              Remove image
+            </button>
+          </div>
+        )}
 
         {error && <ErrorMessage message={error} />}
 

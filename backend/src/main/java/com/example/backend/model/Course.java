@@ -34,6 +34,10 @@ public class Course {
 
     private Instant createdAt;
 
+    // Data URI ("data:image/png;base64,...") or null. Validated and
+    // size-capped in CourseService before ever reaching the document.
+    private String imageBase64;
+
     public Course() {
     }
 
@@ -70,4 +74,6 @@ public class Course {
     public void setActive(boolean active) { this.active = active; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+    public String getImageBase64() { return imageBase64; }
+    public void setImageBase64(String imageBase64) { this.imageBase64 = imageBase64; }
 }
