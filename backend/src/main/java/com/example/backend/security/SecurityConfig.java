@@ -22,8 +22,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * Wires Spring Security to be stateless (no sessions - JWT only) and
  * defines which endpoints are public vs. which require a logged-in user.
  *
- * Only /api/auth/register and /api/auth/login (and the Swagger docs) are
- * public. Everything else requires a valid Bearer token, with role checks
+ * Only /api/auth/register, /api/auth/login, and the API docs (Swagger UI
+ * and GET /api/docs) are public. Everything else requires a valid Bearer
+ * token, with role checks
  * layered on top for admin-only actions:
  * - Course writes (create/update/activate/deactivate) -> ADMIN only.
  * - Course reads -> any logged-in user (students browse courses).
@@ -67,6 +68,7 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/docs").permitAll()
 
                         .requestMatchers(HttpMethod.POST, "/api/courses").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/courses/**").hasRole("ADMIN")

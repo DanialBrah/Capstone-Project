@@ -4,6 +4,8 @@ import com.example.backend.dto.CreateEnrolmentRequest;
 import com.example.backend.dto.EnrolmentResponse;
 import com.example.backend.security.AuthenticatedUser;
 import com.example.backend.service.EnrolmentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/enrolments")
+@Tag(name = "Enrolments", description = "Students enrol in courses; admins can view and cancel any enrolment.")
 public class EnrolmentController {
 
     private final EnrolmentService enrolmentService;
@@ -44,6 +47,7 @@ public class EnrolmentController {
     }
 
     @PostMapping
+    @Operation(summary = "Enrol in a course", description = "STUDENT only. Fails if the course is inactive, full, or already actively enrolled.")
     public ResponseEntity<EnrolmentResponse> enrol(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @Valid @RequestBody CreateEnrolmentRequest request) {
@@ -53,16 +57,19 @@ public class EnrolmentController {
     }
 
     @GetMapping("/my")
+    @Operation(summary = "List my enrolments", description = "Any logged-in user; returns only the caller's own enrolments.")
     public List<EnrolmentResponse> getMyEnrolments(@AuthenticationPrincipal AuthenticatedUser currentUser) {
         return enrolmentService.getMyEnrolments(currentUser.id());
     }
 
     @GetMapping
+    @Operation(summary = "List every enrolment", description = "ADMIN only.")
     public List<EnrolmentResponse> getAllEnrolments() {
         return enrolmentService.getAllEnrolments();
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Cancel an enrolment", description = "Any logged-in user, but a STUDENT may only cancel their own (403 otherwise); ADMIN can cancel any.")
     public ResponseEntity<Void> cancel(
             @AuthenticationPrincipal AuthenticatedUser currentUser,
             @PathVariable String id) {

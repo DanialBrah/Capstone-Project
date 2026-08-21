@@ -24,7 +24,10 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Course Enrolment API")
-                        .description("Authentication endpoints for the Course Enrolment System capstone project")
+                        .description("""
+                                REST API for the Course Enrolment System capstone project: user \
+                                registration/login (JWT), course catalog management, student \
+                                enrolments, and admin reporting.""")
                         .version("v1"))
                 .addSecurityItem(new SecurityRequirement().addList(BEARER_SCHEME_NAME))
                 .components(new Components()
