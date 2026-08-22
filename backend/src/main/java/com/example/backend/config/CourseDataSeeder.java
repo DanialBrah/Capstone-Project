@@ -7,8 +7,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
+// Disabled under the "test" profile - see UserDataSeeder for why.
 @Configuration
+@Profile("!test")
 public class CourseDataSeeder {
 
     private static final Logger logger = LoggerFactory.getLogger(CourseDataSeeder.class);

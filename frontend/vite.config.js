@@ -16,4 +16,12 @@ export default defineConfig({
       }
     }
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.js'],
+    // The default "forks" pool fails to spawn worker processes in some
+    // sandboxed/restricted-PATH environments; "threads" is more portable.
+    pool: 'threads'
+  },
 })

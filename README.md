@@ -161,7 +161,21 @@ cd backend
 ./mvnw test
 ```
 
-The frontend currently has no automated test suite (`npm run lint` is available for static checks).
+Backend tests are plain JUnit 5 + Mockito unit tests against the service layer
+(`AuthServiceTest`, `CourseServiceTest`, `EnrolmentServiceTest`, `JwtServiceTest`) — they
+mock repositories/collaborators, so no MongoDB instance is required to run them.
+`UserDataSeeder`/`CourseDataSeeder` (the dev-convenience seed data) are disabled under the
+`test` Spring profile (`backend/src/test/resources/application.properties`) so
+`BackendApplicationTests`' full context-load smoke test doesn't need a live database either.
+
+```bash
+cd frontend
+npm run test
+```
+
+Frontend tests use [Vitest](https://vitest.dev/) + React Testing Library
+(`httpClient.test.js`, `AuthContext.test.jsx`, `PaginationControls.test.jsx`,
+`StatusBadge.test.jsx`). `npm run lint` remains available for static checks.
 
 ## Database
 

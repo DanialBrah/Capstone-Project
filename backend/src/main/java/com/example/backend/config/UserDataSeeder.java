@@ -7,14 +7,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /*
  * Seeds a couple of demo accounts on startup so you can log in immediately
  * without registering first. Safe to run every time the app starts - it
  * skips creating a user if that email already exists.
+ *
+ * Disabled under the "test" profile: @SpringBootTest boots this bean too,
+ * and it would otherwise hit a real MongoDB on every test run.
  */
 @Configuration
+@Profile("!test")
 public class UserDataSeeder {
 
     private static final Logger logger = LoggerFactory.getLogger(UserDataSeeder.class);
