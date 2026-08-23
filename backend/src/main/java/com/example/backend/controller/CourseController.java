@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -89,5 +90,16 @@ public class CourseController {
     @Operation(summary = "Reactivate a course", description = "ADMIN only.")
     public CourseResponse activateCourse(@PathVariable String id) {
         return courseService.setActive(id, true);
+    }
+
+    // Hard delete: only allowed when the course has no enrolment history at
+    // all - see CourseService.deleteCourse. Anything with history should be
+    // deactivated instead, via PATCH /{id}/deactivate.
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Permanently delete a course", description = "ADMIN only. Rejected (400) if any enrolment - "
+            + "even a cancelled one - references this course; deactivate it instead in that case.")
+    public ResponseEntity<Void> deleteCourse(@PathVariable String id) {
+        courseService.deleteCourse(id);
+        return ResponseEntity.noContent().build();
     }
 }

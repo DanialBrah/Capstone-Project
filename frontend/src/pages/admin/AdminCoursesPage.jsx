@@ -6,7 +6,7 @@ import LoadingMessage from '../../components/LoadingMessage.jsx';
 import PaginationControls from '../../components/PaginationControls.jsx';
 import StatusBadge from '../../components/StatusBadge.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { activateCourse, deactivateCourse, fetchCourses } from '../../services/courseApi.js';
+import { activateCourse, deactivateCourse, deleteCourse, fetchCourses } from '../../services/courseApi.js';
 
 const PAGE_SIZE = 10;
 
@@ -18,6 +18,7 @@ export default function AdminCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [togglingId, setTogglingId] = useState('');
+  const [deletingId, setDeletingId] = useState('');
 
   async function loadCourses() {
     try {
@@ -53,6 +54,24 @@ export default function AdminCoursesPage() {
       setError(err.message || 'Could not update this course.');
     } finally {
       setTogglingId('');
+    }
+  }
+
+  async function handleDelete(course) {
+    if (!window.confirm(`Permanently delete "${course.title}"? This cannot be undone.`)) {
+      return;
+    }
+
+    setDeletingId(course.id);
+    setError('');
+
+    try {
+      await deleteCourse(course.id, token);
+      await loadCourses();
+    } catch (err) {
+      setError(err.message || 'Could not delete this course.');
+    } finally {
+      setDeletingId('');
     }
   }
 
@@ -108,6 +127,14 @@ export default function AdminCoursesPage() {
                         disabled={togglingId === course.id}
                       >
                         {course.active ? 'Deactivate' : 'Activate'}
+                      </button>
+                      <button
+                        type="button"
+                        className="button-danger"
+                        onClick={() => handleDelete(course)}
+                        disabled={deletingId === course.id}
+                      >
+                        {deletingId === course.id ? 'Deleting...' : 'Delete'}
                       </button>
                     </td>
                   </tr>

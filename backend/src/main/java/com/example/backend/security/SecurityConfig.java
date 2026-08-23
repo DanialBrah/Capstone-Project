@@ -26,7 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * and GET /api/docs) are public. Everything else requires a valid Bearer
  * token, with role checks
  * layered on top for admin-only actions:
- * - Course writes (create/update/activate/deactivate) -> ADMIN only.
+ * - Course writes (create/update/activate/deactivate/delete) -> ADMIN only.
  * - Course reads -> any logged-in user (students browse courses).
  * - Creating an enrolment -> STUDENT only.
  * - Viewing every enrolment -> ADMIN only; a student can only see their
@@ -73,6 +73,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/courses").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/courses/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/courses/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/courses/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/courses/**").authenticated()
 
                         .requestMatchers(HttpMethod.POST, "/api/enrolments").hasRole("STUDENT")

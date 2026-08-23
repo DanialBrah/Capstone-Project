@@ -42,3 +42,7 @@ export async function activateCourse(id, token) {
 export async function deactivateCourse(id, token) {
   return apiRequest(`/api/courses/${id}/deactivate`, { method: 'PATCH', token });
 }
+
+export async function deleteCourse(id, token) {
+  return apiRequest(`/api/courses/${id}`, { method: 'DELETE', token });
+}

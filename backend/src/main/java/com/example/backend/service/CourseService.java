@@ -7,6 +7,7 @@ import com.example.backend.exception.InvalidRequestException;
 import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.Course;
 import com.example.backend.repository.CourseRepository;
+import com.example.backend.repository.EnrolmentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -46,10 +47,13 @@ public class CourseService {
     private static final int MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 
     private final CourseRepository courseRepository;
+    private final EnrolmentRepository enrolmentRepository;
     private final MongoTemplate mongoTemplate;
 
-    public CourseService(CourseRepository courseRepository, MongoTemplate mongoTemplate) {
+    public CourseService(CourseRepository courseRepository, EnrolmentRepository enrolmentRepository,
+                          MongoTemplate mongoTemplate) {
         this.courseRepository = courseRepository;
+        this.enrolmentRepository = enrolmentRepository;
         this.mongoTemplate = mongoTemplate;
     }
 
@@ -149,6 +153,23 @@ public class CourseService {
         logger.info("Set course id={} active={}", savedCourse.getId(), active);
 
         return toResponse(savedCourse);
+    }
+
+    // Hard delete is only safe when the course has no enrolment history at
+    // all (not even cancelled ones) - otherwise those records would point
+    // at a course id that no longer resolves, breaking EnrolmentService's
+    // cancel flow and silently corrupting reports. Anything with history
+    // must go through setActive(id, false) (deactivate) instead.
+    public void deleteCourse(String id) {
+        Course course = findCourseOrThrow(id);
+
+        if (enrolmentRepository.existsByCourseId(id)) {
+            throw new InvalidRequestException(
+                    "Cannot delete a course that has enrolment history - deactivate it instead: " + course.getTitle());
+        }
+
+        courseRepository.delete(course);
+        logger.info("Deleted course id={} title={}", id, course.getTitle());
     }
 
     Course findCourseOrThrow(String id) {

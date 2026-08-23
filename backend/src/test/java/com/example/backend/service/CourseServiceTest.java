@@ -4,8 +4,10 @@ import com.example.backend.dto.CourseResponse;
 import com.example.backend.dto.CreateCourseRequest;
 import com.example.backend.dto.UpdateCourseRequest;
 import com.example.backend.exception.InvalidRequestException;
+import com.example.backend.exception.ResourceNotFoundException;
 import com.example.backend.model.Course;
 import com.example.backend.repository.CourseRepository;
+import com.example.backend.repository.EnrolmentRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,6 +21,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,6 +30,9 @@ class CourseServiceTest {
 
     @Mock
     private CourseRepository courseRepository;
+
+    @Mock
+    private EnrolmentRepository enrolmentRepository;
 
     @Mock
     private MongoTemplate mongoTemplate;
@@ -159,5 +166,37 @@ class CourseServiceTest {
         assertThat(response.isActive()).isTrue();
         assertThat(response.getEnrolledCount()).isZero();
         assertThat(response.getImageBase64()).isNull();
+    }
+
+    @Test
+    void deleteCourseRejectsWhenEnrolmentHistoryExists() {
+        Course course = existingCourse();
+        when(courseRepository.findById("course-1")).thenReturn(Optional.of(course));
+        when(enrolmentRepository.existsByCourseId("course-1")).thenReturn(true);
+
+        assertThatThrownBy(() -> courseService.deleteCourse("course-1"))
+                .isInstanceOf(InvalidRequestException.class)
+                .hasMessageContaining("deactivate");
+
+        verify(courseRepository, never()).delete(any(Course.class));
+    }
+
+    @Test
+    void deleteCourseSucceedsWhenNoEnrolmentHistoryExists() {
+        Course course = existingCourse();
+        when(courseRepository.findById("course-1")).thenReturn(Optional.of(course));
+        when(enrolmentRepository.existsByCourseId("course-1")).thenReturn(false);
+
+        courseService.deleteCourse("course-1");
+
+        verify(courseRepository).delete(course);
+    }
+
+    @Test
+    void deleteCourseThrowsWhenCourseDoesNotExist() {
+        when(courseRepository.findById("missing")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> courseService.deleteCourse("missing"))
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }

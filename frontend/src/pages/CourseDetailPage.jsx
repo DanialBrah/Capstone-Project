@@ -4,7 +4,7 @@ import ErrorMessage from '../components/ErrorMessage.jsx';
 import LoadingMessage from '../components/LoadingMessage.jsx';
 import StatusBadge from '../components/StatusBadge.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
-import { activateCourse, deactivateCourse, fetchCourseById } from '../services/courseApi.js';
+import { activateCourse, deactivateCourse, deleteCourse, fetchCourseById } from '../services/courseApi.js';
 import { enrolInCourse } from '../services/enrolmentApi.js';
 
 export default function CourseDetailPage() {
@@ -19,6 +19,8 @@ export default function CourseDetailPage() {
   const [enrolling, setEnrolling] = useState(false);
   const [enrolError, setEnrolError] = useState('');
   const [enrolled, setEnrolled] = useState(false);
+
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -70,6 +72,23 @@ export default function CourseDetailPage() {
       setCourse(updated);
     } catch (err) {
       setError(err.message || 'Could not update this course.');
+    }
+  }
+
+  async function handleDelete() {
+    if (!window.confirm(`Permanently delete "${course.title}"? This cannot be undone.`)) {
+      return;
+    }
+
+    setDeleting(true);
+    setError('');
+
+    try {
+      await deleteCourse(id, token);
+      navigate('/admin/courses', { replace: true });
+    } catch (err) {
+      setError(err.message || 'Could not delete this course.');
+      setDeleting(false);
     }
   }
 
@@ -151,6 +170,9 @@ export default function CourseDetailPage() {
           </Link>
           <button type="button" onClick={handleToggleActive}>
             {course.active ? 'Deactivate' : 'Activate'}
+          </button>
+          <button type="button" className="button-danger" onClick={handleDelete} disabled={deleting}>
+            {deleting ? 'Deleting...' : 'Delete'}
           </button>
           <button type="button" onClick={() => navigate('/admin/courses')}>
             Back to course management

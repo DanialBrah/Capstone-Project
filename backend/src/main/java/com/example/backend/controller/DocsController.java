@@ -66,7 +66,9 @@ public class DocsController {
                                         new EndpointDoc("PATCH", "/api/courses/{id}/deactivate",
                                                 "Soft-delete: blocks new enrolments, keeps history", "ADMIN"),
                                         new EndpointDoc("PATCH", "/api/courses/{id}/activate",
-                                                "Reactivate a course", "ADMIN")
+                                                "Reactivate a course", "ADMIN"),
+                                        new EndpointDoc("DELETE", "/api/courses/{id}",
+                                                "Permanently delete a course (rejected if it has any enrolment history - deactivate instead)", "ADMIN")
                                 )),
                         new EndpointGroupDoc(
                                 "Enrolments",
